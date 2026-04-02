@@ -1,0 +1,6 @@
+node_modules
+.next
+grandpas_book.docx.docx
+images
+chapters.json
+*.docx
