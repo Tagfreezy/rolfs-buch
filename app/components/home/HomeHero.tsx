@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 
 // Deterministic pseudo-random star positions (no Math.random → no hydration mismatch)
@@ -121,6 +122,31 @@ export default function HomeHero({ totalChapters }: { totalChapters: number }) {
             sehen wollen
           </span>
         </motion.h1>
+
+        {/* Author portrait + attribution */}
+        <motion.div
+          variants={fadeUp}
+          className="mb-10 flex items-center justify-center gap-4"
+        >
+          <div
+            className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full"
+            style={{
+              boxShadow: '0 0 0 2px rgba(99,102,241,0.7), 0 0 24px rgba(99,102,241,0.35)',
+            }}
+          >
+            <Image
+              src="/grandpa.jpg"
+              alt="Rolf Burgermeister"
+              fill
+              className="object-cover"
+              sizes="56px"
+            />
+          </div>
+          <div className="text-left">
+            <p className="text-base font-semibold text-white/90">Rolf Burgermeister</p>
+            <p className="text-sm text-white/40">UFO-Forscher · 40 Jahre Feldarbeit</p>
+          </div>
+        </motion.div>
 
         {/* Subheading */}
         <motion.p
