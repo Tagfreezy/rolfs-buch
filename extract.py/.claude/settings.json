@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(curl -s -X POST https://api.anthropic.com/v1/messages -H 'x-api-key: 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' -H 'anthropic-version: 2023-06-01' -H 'content-type: application/json' -d '{\"model\":\"claude-haiku-4-5-20251001\",\"max_tokens\":50,\"messages\":[{\"role\":\"user\",\"content\":\"Hallo\"}]}')",
-      "Bash(curl -s -X POST http://localhost:3004/api/chat -H \"Content-Type: application/json\" -d \"{\\\\\"question\\\\\":\\\\\"was ist das coolste was rolf gesagt hat\\\\\"}\")"
+      "Bash(curl -s -X POST http://localhost:3004/api/chat -H \"Content-Type: application/json\" -d \"{\\\\\"question\\\\\":\\\\\"was ist das coolste was rolf gesagt hat\\\\\"}\")",
+      "Read(//c/Users/salas/Downloads/Api Buch/app/components/**)",
+      "Read(//c/Users/salas/Downloads/Api Buch/**)",
+      "Bash(git -C \"c:\\\\Users\\\\salas\\\\Downloads\\\\Api Buch\" show HEAD:.env.local)",
+      "Bash(git -C \"c:\\\\Users\\\\salas\\\\Downloads\\\\Api Buch\" add app/api/chat/route.ts)",
+      "Bash(git -C \"c:\\\\Users\\\\salas\\\\Downloads\\\\Api Buch\" diff --cached --stat)",
+      "Bash(git -C \"c:\\\\Users\\\\salas\\\\Downloads\\\\Api Buch\" commit -m \"fix: read ANTHROPIC_API_KEY inside handler, improve error logging in chat route\")",
+      "Bash(git -C \"c:\\\\Users\\\\salas\\\\Downloads\\\\Api Buch\" push)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\salas\\Downloads\\Api Buch\\app\\components",
+      "c:\\Users\\salas\\Downloads\\Api Buch\\app\\api\\chat"
     ]
   }
 }
