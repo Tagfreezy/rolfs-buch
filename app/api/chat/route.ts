@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { requireSupabase } from '@/lib/supabaseClient';
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-
 export async function POST(request: Request) {
+  // Read env var inside the handler — NOT at module level.
+  // Module-level reads can be undefined during Vercel cold starts.
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
   try {
     const body = await request.json();
     const question = (body.question ?? '').trim();
@@ -13,10 +15,14 @@ export async function POST(request: Request) {
     }
 
     if (!ANTHROPIC_API_KEY) {
-      return NextResponse.json({ error: 'Anthropic API-Schlüssel nicht konfiguriert.' }, { status: 500 });
+      console.error('[chat] ANTHROPIC_API_KEY is not set in environment variables');
+      return NextResponse.json(
+        { error: 'Anthropic API-Schlüssel nicht konfiguriert.' },
+        { status: 500 }
+      );
     }
 
-    // Search the chapters table using full-text search on the fts column
+    // ── Supabase: full-text search for relevant chapters ──────────────────────
     const supabase = requireSupabase();
     let chapters: Array<{ title: string; chapter_number: number; content: string }> = [];
 
@@ -29,30 +35,41 @@ export async function POST(request: Request) {
 
       if (!error && data && data.length > 0) {
         chapters = data;
+      } else if (error) {
+        console.error('[chat] fts search error:', error.message);
       }
-    } catch {
-      // fts column might not exist — fall back to content search
+    } catch (e) {
+      console.error('[chat] fts search threw:', e);
     }
 
-    // Fallback: search content column directly if fts returned nothing
+    // Fallback: search on content column if fts returned nothing
     if (chapters.length === 0) {
-      const { data } = await supabase
-        .from('chapters')
-        .select('title, chapter_number, content')
-        .textSearch('content', question, { type: 'websearch', config: 'english' })
-        .limit(3);
-      chapters = data ?? [];
+      try {
+        const { data, error } = await supabase
+          .from('chapters')
+          .select('title, chapter_number, content')
+          .textSearch('content', question, { type: 'websearch', config: 'english' })
+          .limit(3);
+
+        if (error) console.error('[chat] content search error:', error.message);
+        chapters = data ?? [];
+      } catch (e) {
+        console.error('[chat] content search threw:', e);
+      }
     }
 
-    // Build context from retrieved chapters
-    const context = chapters.length > 0
-      ? chapters
-          .map(
-            (ch) =>
-              `--- Kapitel ${ch.chapter_number}: ${ch.title} ---\n${ch.content.slice(0, 2500)}`
-          )
-          .join('\n\n')
-      : 'Keine relevanten Kapitel gefunden.';
+    console.log(`[chat] question="${question}" chapters_found=${chapters.length}`);
+
+    // ── Build context ─────────────────────────────────────────────────────────
+    const context =
+      chapters.length > 0
+        ? chapters
+            .map(
+              (ch) =>
+                `--- Kapitel ${ch.chapter_number}: ${ch.title} ---\n${ch.content.slice(0, 2500)}`
+            )
+            .join('\n\n')
+        : 'Keine relevanten Kapitel gefunden.';
 
     const systemPrompt = `Du bist "Rolf's Assistent", ein präziser KI-Assistent für das UFO-Forschungsarchiv von Rolf Burgermeister.
 
@@ -69,48 +86,56 @@ WICHTIGE REGELN:
 RELEVANTE BUCHAUSZÜGE:
 ${context}`;
 
-    // Call Anthropic API
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: question,
-          },
-        ],
-      }),
-    });
+    // ── Call Anthropic API ────────────────────────────────────────────────────
+    let anthropicRes: Response;
+    try {
+      anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: question }],
+        }),
+      });
+    } catch (fetchErr) {
+      console.error('[chat] Network error reaching Anthropic API:', fetchErr);
+      return NextResponse.json(
+        { error: 'Netzwerkfehler beim Erreichen des KI-Dienstes.' },
+        { status: 502 }
+      );
+    }
 
     if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
-      console.error('Anthropic API error:', errText);
+      const errBody = await anthropicRes.text();
+      console.error(
+        `[chat] Anthropic API responded ${anthropicRes.status}: ${errBody}`
+      );
       return NextResponse.json(
-        { error: 'Fehler bei der Verbindung zum KI-Dienst.' },
+        { error: `KI-Dienst Fehler (${anthropicRes.status}): ${errBody}` },
         { status: 502 }
       );
     }
 
     const anthropicData = await anthropicRes.json();
-    const answer =
-      anthropicData?.content?.[0]?.text ?? 'Keine Antwort erhalten.';
+    const answer = anthropicData?.content?.[0]?.text ?? 'Keine Antwort erhalten.';
 
-    const sources = chapters.map((ch) => ({
-      chapter_number: ch.chapter_number,
-      title: ch.title,
-    }));
+    console.log(`[chat] answer_length=${answer.length} sources=${chapters.length}`);
 
-    return NextResponse.json({ answer, sources });
+    return NextResponse.json({
+      answer,
+      sources: chapters.map((ch) => ({
+        chapter_number: ch.chapter_number,
+        title: ch.title,
+      })),
+    });
   } catch (err) {
-    console.error('Chat route error:', err);
+    console.error('[chat] Unhandled error:', err);
     return NextResponse.json(
       { error: 'Ein unerwarteter Fehler ist aufgetreten.' },
       { status: 500 }
