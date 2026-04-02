@@ -52,7 +52,7 @@ const statItem: any = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
-export default function HomeHero({ totalChapters }: { totalChapters: number }) {
+export default function HomeHero({ totalChapters, firstChapterNumber }: { totalChapters: number; firstChapterNumber: number }) {
   return (
     <section
       className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-24"
@@ -166,7 +166,7 @@ export default function HomeHero({ totalChapters }: { totalChapters: number }) {
           className="mb-20 flex flex-wrap items-center justify-center gap-4"
         >
           <Link
-            href="/chapter/1"
+            href={`/chapter/${firstChapterNumber}`}
             className="group inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:scale-105"
             style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
           >

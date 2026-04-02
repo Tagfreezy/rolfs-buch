@@ -12,13 +12,15 @@ export default async function HomePage() {
     getRecentChapters(6),
   ]);
 
+  const firstChapterNumber = chapters[0]?.chapter_number ?? 1;
+
   return (
     <main style={{ background: '#050A14' }} className="min-h-screen">
-      <HomeHero totalChapters={chapters.length} />
+      <HomeHero totalChapters={chapters.length} firstChapterNumber={firstChapterNumber} />
       <HomeSearch />
       <HomeFeatures />
       <HomeRecent chapters={recentChapters} />
-      <HomeFooter />
+      <HomeFooter firstChapterNumber={firstChapterNumber} />
     </main>
   );
 }

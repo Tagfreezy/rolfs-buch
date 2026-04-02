@@ -13,7 +13,8 @@
     ],
     "additionalDirectories": [
       "c:\\Users\\salas\\Downloads\\Api Buch\\app\\components",
-      "c:\\Users\\salas\\Downloads\\Api Buch\\app\\api\\chat"
+      "c:\\Users\\salas\\Downloads\\Api Buch\\app\\api\\chat",
+      "c:\\Users\\salas\\Downloads\\Api Buch\\app"
     ]
   }
 }

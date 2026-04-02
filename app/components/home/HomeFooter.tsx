@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-export default function HomeFooter() {
+export default function HomeFooter({ firstChapterNumber }: { firstChapterNumber: number }) {
   return (
     <footer style={{ background: '#050A14' }} className="px-4 pb-12 pt-8">
       {/* Divider */}
@@ -49,7 +49,7 @@ export default function HomeFooter() {
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/5 pt-8 text-xs text-white/20 sm:flex-row">
           <p>744 Kapitel · 1.178 Bilder · 6 Kontinente · 40+ Jahre</p>
           <Link
-            href="/chapter/1"
+            href={`/chapter/${firstChapterNumber}`}
             className="transition-colors hover:text-white/50"
           >
             Zum Archiv →
