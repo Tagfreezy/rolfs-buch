@@ -4,3 +4,10 @@ grandpas_book.docx.docx
 images
 chapters.json
 *.docx
+
+# Secrets and local tooling
+.env*.local
+.env
+.claude/
+**/.claude/
+tsconfig.tsbuildinfo

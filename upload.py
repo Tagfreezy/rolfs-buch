@@ -1,7 +1,21 @@
-import json, os, requests
+import json, os, sys, requests
 
-SUPABASE_URL = "https://csjappdlptoigwxjcgvv.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzamFwcGRscHRvaWd3eGpjZ3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzM1NzgsImV4cCI6MjA5MDcwOTU3OH0.cCZZ7VzXM2gQ1fMo5UX3IymeTbBAcnl23R5Gp80Ux3Q"
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+
+missing = [name for name, value in (
+    ("SUPABASE_URL", SUPABASE_URL),
+    ("SUPABASE_SERVICE_ROLE_KEY", SUPABASE_KEY),
+) if not value]
+if missing:
+    sys.exit(
+        "Error: missing environment variable(s): " + ", ".join(missing) + "\n"
+        "Set them before running upload.py, e.g. in PowerShell:\n"
+        '  $env:SUPABASE_URL="https://<project-ref>.supabase.co"\n'
+        '  $env:SUPABASE_SERVICE_ROLE_KEY="<service role key>"'
+    )
+
+SUPABASE_URL = SUPABASE_URL.rstrip("/")
 
 headers = {
     "apikey": SUPABASE_KEY,
